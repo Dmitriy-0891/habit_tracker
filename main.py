@@ -23,9 +23,22 @@ data_file = Path("habits.txt")
 
 def add_habbit(name: str, name_2: str):
     """Добавляет привычку в файл"""
-    logging.info(f"Добавлена привычка: {name}; {name_2}") 
+    logging.info(f"Добавлены привычки: 1){name}; 2){name_2}") 
     with open(data_file, 'a') as  f:
-        f.write(f'{name}, {name_2} {datetime.now()}\n')
+        f.write(f'{name}, {name_2} - {datetime.now()}\n')
+
+
+def show_habbits():
+    if data_file.exists():
+        with open(data_file, "r") as f:
+            for line in f:
+                habit_name = line.split('-')[0]
+                logging.info(f'Найдены привычки: {habit_name}')
+    else:
+        logging.warning(f'Файл с привычками не найден')
+            
+        
         
 if __name__ == '__main__':
     add_habbit('прочитать 10 страниц', 'изучить слепую печать на qwerty-клавиатуре')
+    show_habbits()
