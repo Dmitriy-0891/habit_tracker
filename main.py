@@ -1,6 +1,7 @@
 # main.py
+import requests 
+from pydantic import BaseModel
 import logging
-import sys
 from pathlib import Path
 from datetime import datetime
 
@@ -20,6 +21,29 @@ root_logger = logging.getLogger()
 root_logger.addHandler(file_handler)
 
 data_file = Path("habits.txt")
+
+# Модель для проверки данных API
+class Motivation(BaseModel):
+    text: str
+    author: str | None = None # автор модет отсутствовать
+    
+
+def get_motivation() -> str:
+    """Получает  мотивирующую фразу с бесплатного API"""
+    try:
+        # Использует публичные API с цитатами
+        response = requests.get('https://api.quotable.io/random', timeout = 5)
+        data = response.json()
+        
+        #pydantic проверит, что пришло именно то, что мы ждем
+        quote = Motivation(text = data['content'], author = data.get('author'))
+        
+        return f'Цитата дня: {quote.text} - {quote.author if quote.author else "Неизвестен"}'
+    
+    except Exception as e:
+        logging.error(f'Не удалось получить цитату: {e}')
+        return 'Продолжай в том же духе!'
+         
 
 def add_habbit(name: str, name_2: str):
     """Добавляет привычку в файл"""
