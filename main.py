@@ -4,7 +4,8 @@ from pydantic import BaseModel
 import logging
 from pathlib import Path
 from datetime import datetime
-
+import sys
+import urllib3
 # настраиваем корневой лог, который будет выводиться на консоль
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s', handlers=[logging.StreamHandler(sys.stdout)])
 
@@ -31,8 +32,10 @@ class Motivation(BaseModel):
 def get_motivation() -> str:
     """Получает  мотивирующую фразу с бесплатного API"""
     try:
+        # Отключаем предупреждения (необязательно, но убирает шум)
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         # Использует публичные API с цитатами
-        response = requests.get('https://api.quotable.io/random', timeout = 5)
+        response = requests.get('https://api.quotable.io/random', timeout = 5, verify = False)
         data = response.json()
         
         #pydantic проверит, что пришло именно то, что мы ждем
@@ -45,24 +48,28 @@ def get_motivation() -> str:
         return 'Продолжай в том же духе!'
          
 
-def add_habbit(name: str, name_2: str):
+def add_habbit_with_motivation(name: str):
     """Добавляет привычку в файл"""
-    logging.info(f"Добавлены привычки: 1){name}; 2){name_2}") 
+    logging.info(f"Добавлена привычка: {name}") 
     with open(data_file, 'a') as  f:
-        f.write(f'{name}, {name_2} - {datetime.now()}\n')
+        f.write(f'{name}, {datetime.now()}, {get_motivation()}\n')
 
 
 def show_habbits():
+    # показывает все привычки с мотивацией
     if data_file.exists():
         with open(data_file, "r") as f:
             for line in f:
-                habit_name = line.split('-')[0]
-                logging.info(f'Найдены привычки: {habit_name}')
+                parts = line.strip().split(',', 2) # разделяем на 3 части
+                if len(parts) == 3:
+                    habit, timestamp, motivation = parts
+                    logging.info(f'Найдена привычка: {habit} от {timestamp}')
+                    logging.info(f'К ней прилагалась цитата: {motivation}')
     else:
         logging.warning(f'Файл с привычками не найден')
             
         
         
 if __name__ == '__main__':
-    add_habbit('прочитать 10 страниц', 'изучить слепую печать на qwerty-клавиатуре')
+    add_habbit_with_motivation('прочитать 10 страниц')
     show_habbits()
