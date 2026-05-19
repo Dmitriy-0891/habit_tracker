@@ -24,35 +24,35 @@ root_logger.addHandler(file_handler)
 data_file = Path("habits.txt")
 
 # Модель для проверки данных API
-class Motivation(BaseModel):
-    text: str
-    author: str | None = None # автор модет отсутствовать
+class Dog_Image(BaseModel):
+    message: str
+    status: str 
     
 
-def get_motivation() -> str:
-    """Получает  мотивирующую фразу с бесплатного API"""
+def get_url_dog_image() -> str:
+    """Получает ссылку на картинку собаки с бесплатного API"""
     try:
         # Отключаем предупреждения (необязательно, но убирает шум)
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         # Использует публичные API с цитатами
-        response = requests.get('https://api.quotable.io/random', timeout = 5, verify = False)
+        response = requests.get('https://dog.ceo/api/breeds/image/random', timeout = 5, verify = False)
         data = response.json()
         
         #pydantic проверит, что пришло именно то, что мы ждем
-        quote = Motivation(text = data['content'], author = data.get('author'))
+        quote = Dog_Image(message = data['message'], status = data.get('status'))
         
-        return f'Цитата дня: {quote.text} - {quote.author if quote.author else "Неизвестен"}'
+        return f'Картинка собаки дня: {quote.message}'
     
     except Exception as e:
-        logging.error(f'Не удалось получить цитату: {e}')
-        return 'Продолжай в том же духе!'
+        logging.error(f'Не удалось получить ссылку: {e}')
+        return 'Все собаки хороши по своему!'
          
 
-def add_habbit_with_motivation(name: str):
+def add_habbit_with_dog_image(name: str):
     """Добавляет привычку в файл"""
     logging.info(f"Добавлена привычка: {name}") 
     with open(data_file, 'a') as  f:
-        f.write(f'{name}, {datetime.now()}, {get_motivation()}\n')
+        f.write(f'{name}, {datetime.now()}, {get_url_dog_image()}\n')
 
 
 def show_habbits():
@@ -62,14 +62,14 @@ def show_habbits():
             for line in f:
                 parts = line.strip().split(',', 2) # разделяем на 3 части
                 if len(parts) == 3:
-                    habit, timestamp, motivation = parts
+                    habit, timestamp, dog_image = parts
                     logging.info(f'Найдена привычка: {habit} от {timestamp}')
-                    logging.info(f'К ней прилагалась цитата: {motivation}')
+                    logging.info(f'К ней прилагалась ссылка: {dog_image}')
     else:
         logging.warning(f'Файл с привычками не найден')
             
         
         
 if __name__ == '__main__':
-    add_habbit_with_motivation('прочитать 10 страниц')
+    add_habbit_with_dog_image('прочитать 10 страниц')
     show_habbits()
