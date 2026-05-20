@@ -1,11 +1,11 @@
 # main.py
 import requests 
-from pydantic import BaseModel
-import logging
+from pydantic import BaseModel, Field, field_validator
 from pathlib import Path
 from datetime import datetime
 import sys
 import urllib3
+import logging
 # настраиваем корневой лог, который будет выводиться на консоль
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s', handlers=[logging.StreamHandler(sys.stdout)])
 
@@ -28,6 +28,15 @@ class Motivation(BaseModel):
     text: str
     author: str | None = None # автор модет отсутствовать
     
+    
+    @field_validator('text', mode = 'before')
+    @classmethod
+    def trim_text(cls, v: str) -> str:
+        if not isinstance(v, str):
+            v = str(v)
+        max_len = 200
+        return v[:max_len]
+        
 
 def get_motivation() -> str:
     """Получает  мотивирующую фразу с бесплатного API"""
